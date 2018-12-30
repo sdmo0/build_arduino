@@ -32,7 +32,7 @@ GCC_OPTS=-c -g -Os -Wall -ffunction-sections -fdata-sections $(GC_HWOPTS) $(GC_S
 GCC_LINKOPTS=-mmcu=$(MMU) -Wl,--gc-sections -L. -lm -lcore
 OBJCPY_EEPOPTS=-O ihex -j .eeprom --set-section-flags=.eeprom=alloc,load --no-change-warnings --change-section-lma .eeprom=0
 OBJCPY_HEXOPTS=-O ihex -j .text -j .data -R .eeprom
-AVRD_OPTS=-C$(AVRD_CONF) -p$(MMU) -carduino -P$(SERIALPORT) -b$(BAUDRATE) -D -Uflash:w:$(CODENAME).hex:i
+AVRD_OPTS=-C$(AVRD_CONF) -p$(MMU) -carduino -P$(SERIALPORT) -b$(BAUDRATE) -Uflash:w:$(CODENAME).hex:i
 
 C_SOURCES:=$(wildcard $(CORES)/*.c)
 C_OBJECTS:=$(patsubst $(CORES)/%.c, %.o, $(C_SOURCES))

@@ -1,0 +1,88 @@
+ARDUINO_DIR=/home/sdmo/Downloads/arduino-1.8.8
+AVR_BIN_DIR=${ARDUINO_DIR}/hardware/tools/avr/bin/
+CORES=$(ARDUINO_DIR)/hardware/arduino/avr/cores/arduino
+TOOLS_INC=${ARDUINO_DIR}/hardware/tools/avr/avr/include
+STDVARIANT=$(ARDUINO_DIR)/hardware/arduino/avr/variants/standard
+AVRD_CONF=/usr/local/etc/avrdude.conf
+#AVRD_CONF=$(ARDUINO_DIR)/hardware/tools/avr/etc/avrdude.conf
+
+#################################
+### add library source directory
+SPI_DIR=${ARDUINO_DIR}/hardware/arduino/avr/libraries/SPI/src/
+
+MMU=atmega328p
+CPUCLOCK=16000000L
+ARDUINOVER=188
+SERIALPORT=/dev/ttyACM0
+BAUDRATE=115200
+
+AVR_CC=$(AVR_BIN_DIR)/avr-gcc
+AVR_CPP=$(AVR_BIN_DIR)/avr-g++
+AVR_OBJCOPY=$(AVR_BIN_DIR)/avr-objcopy
+AVR_AR=$(AVR_BIN_DIR)/avr-ar
+
+GC_HWOPTS=-mmcu=$(MMU) -DF_CPU=$(CPUCLOCK) -DARDUINO=$(ARDUINOVER)
+
+#################################
+### add include option in the end of this
+GC_STDINC=-I$(TOOLS_INC) -I$(CORES) -I$(STDVARIANT) -I$(SPI_DIR)
+
+GPP_OPTS=-c -g -Os -Wall -fno-exceptions -ffunction-sections -fdata-sections $(GC_HWOPTS) $(GC_STDINC)
+GCC_OPTS=-c -g -Os -Wall -ffunction-sections -fdata-sections $(GC_HWOPTS) $(GC_STDINC)
+GCC_LINKOPTS=-mmcu=$(MMU) -Wl,--gc-sections -L. -lm -lcore
+OBJCPY_EEPOPTS=-O ihex -j .eeprom --set-section-flags=.eeprom=alloc,load --no-change-warnings --change-section-lma .eeprom=0
+OBJCPY_HEXOPTS=-O ihex -j .text -j .data -R .eeprom
+AVRD_OPTS=-C$(AVRD_CONF) -p$(MMU) -carduino -P$(SERIALPORT) -b$(BAUDRATE) -D -Uflash:w:$(CODENAME).hex:i
+
+C_SOURCES:=$(wildcard $(CORES)/*.c)
+C_OBJECTS:=$(patsubst $(CORES)/%.c, %.o, $(C_SOURCES))
+CPP_SOURCES:=$(wildcard $(CORES)/*.cpp)
+CPP_OBJECTS:=$(patsubst $(CORES)/%.cpp, %.o, $(CPP_SOURCES))
+
+#################################
+### add source and object list
+SPI_SOURCES:=$(wildcard $(SPI_DIR)/*.cpp)
+SPI_OBJECTS:=$(patsubst $(SPI_DIR)/%.cpp, %.o, $(SPI_SOURCES))
+
+#################################
+### add objects in the end of this
+CORE_OBJECTS:=$(C_OBJECTS) $(CPP_OBJECTS) $(SPI_OBJECTS)
+
+build: $(CODENAME).hex
+	$(AVR_OBJCOPY) $(OBJCPY_HEXOPTS) $(CODENAME).elf $(CODENAME).hex
+
+$(CODENAME).hex: $(CODENAME).elf
+	$(AVR_OBJCOPY) $(OBJCPY_EEPOPTS) $(CODENAME).elf $(CODENAME).eep
+
+$(CODENAME).elf: libcore.a $(CODENAME).o
+	$(AVR_CC) -o $@ $(CODENAME).o $(GCC_LINKOPTS)
+
+$(CODENAME).o: $(CODENAME).cpp
+	$(AVR_CPP) $(GPP_OPTS) -o$(CODENAME).o $(CODENAME).cpp
+
+$(CODENAME).cpp: $(CODEDIR)/$(CODENAME).ino
+	cp $(CODEDIR)/$(CODENAME).ino $(CODENAME).cpp
+
+libcore.a: $(CORE_OBJECTS)
+	$(AVR_AR) rcs libcore.a $(CORE_OBJECTS)
+
+%.o: $(CORES)/%.c
+	@echo $(C_SOURCES)
+	$(AVR_CC) $(GCC_OPTS) $< -o $@
+
+%.o: $(CORES)/%.cpp
+	@echo $(CPP_SOURCES)
+	$(AVR_CPP) $(GPP_OPTS) $< -o $@
+
+#################################
+### add how to make object
+%.o: $(SPI_DIR)/%.cpp
+	@echo $(SPI_SOURCES)
+	$(AVR_CPP) $(GPP_OPTS) $< -o $@
+
+flash:
+	avrdude $(AVRD_OPTS)
+
+clean:
+	-rm -f *.o *.hex *.elf *.eep libcore.a *~
+

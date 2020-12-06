@@ -2,7 +2,7 @@
 
 print_help()
 {
-  echo "$0 <board, ex: nano | uno | mega> <serial port, ex: /dev/ttyUSB0> <file name>"
+  echo "$0 <board, ex: nano|uno|mega> <serial port, ex: /dev/ttyUSB0> <file name>"
 }
 
 if [ $# -ne 3 ]; then

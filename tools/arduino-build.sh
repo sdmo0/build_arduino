@@ -21,7 +21,7 @@ if [ $argc -lt 3 ] || [ $argc -gt 4 ]; then
   exit
 fi
 
-if [ "$1" != "compile" ] && [ "$2" != "upload" ]; then
+if [ "$1" != "compile" ] && [ "$1" != "upload" ]; then
   print_help
   echo "-----------------------------"
   echo "first parameter: only use 'compile' or 'upload'"

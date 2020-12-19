@@ -1,12 +1,17 @@
-#!/bin/sh
+#!/bin/bash
+
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+
+. ${DIR}/file-tools.sh
 
 print_help()
 {
-  echo "$0 <board, ex: nano|uno|mega> <serial port, ex: /dev/ttyUSB0> <file name>"
+  filename=$(get_file_name_ext $1)
+  echo "${filename} <board, ex: nano|uno|mega> <serial port, ex: /dev/ttyUSB0> <file name>"
 }
 
 if [ $# -ne 3 ]; then
-  print_help
+  print_help $0
   exit
 fi
 

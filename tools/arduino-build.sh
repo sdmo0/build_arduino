@@ -1,8 +1,13 @@
 #!/bin/bash
 
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+
+. ${DIR}/file-tools.sh
+
 print_help()
 {
-  echo "$0 <command, compile|upload> <board, nano|uno|mega> <ino file name> <serial port, /dev/ttyUSB0>"
+  filename=$(get_file_name_ext $1)
+  echo "${filename} <command, compile|upload> <board, nano|uno|mega> <ino file name> <serial port, /dev/ttyUSB0>"
 }
 
 print_parameter()
@@ -17,19 +22,19 @@ print_parameter()
 
 argc=$#
 if [ $argc -lt 3 ] || [ $argc -gt 4 ]; then
-  print_help
+  print_help $0
   exit
 fi
 
 if [ "$1" != "compile" ] && [ "$1" != "upload" ]; then
-  print_help
+  print_help $0
   echo "-----------------------------"
   echo "first parameter: only use 'compile' or 'upload'"
   exit
 fi
 
 if [ "$2" != "nano" ] && [ "$2" != "uno" ] && [ "$2" != "mega" ]; then
-  print_help
+  print_help $0
   echo "-----------------------------"
   echo "second parameter: only use 'nano', 'uno' or 'mega'"
   exit
@@ -50,6 +55,6 @@ elif [ $1 == "upload" ]; then
   # arduino-cli upload -v -p /dev/ttyUSB0 -b arduino:avr:nano:cpu=atmega328old my_sketch/
 
 else
-  print_help
+  print_help $0
   exit
 fi
